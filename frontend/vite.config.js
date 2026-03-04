@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  base: '/OJT_Hour_Checker/',
   server: {
     port: 3000,
     proxy: {
