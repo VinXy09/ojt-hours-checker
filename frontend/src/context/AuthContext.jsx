@@ -10,30 +10,50 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      authAPI.getCurrentUser()
-        .then(res => {
-          setUser(res.data || res);
-        })
-        .catch((err) => {
-          console.error('Auth error:', err);
-          localStorage.removeItem('token');
-          setError(err.message || 'Authentication failed');
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } else {
+    
+    // If no token, skip auth check
+    if (!token) {
       setLoading(false);
+      return;
     }
+    
+    // Create abort controller for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    authAPI.getCurrentUser()
+      .then(res => {
+        clearTimeout(timeoutId);
+        const userData = res.data?.data || res.data || res;
+        setUser(userData);
+      })
+      .catch((err) => {
+        clearTimeout(timeoutId);
+        console.warn('Auth check failed (expected if API not configured):', err.message || err);
+        // Clear invalid token
+        localStorage.removeItem('token');
+      })
+      .finally(() => {
+        clearTimeout(timeoutId);
+        setLoading(false);
+      });
+      
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, []);
 
   const login = async (email, password) => {
     try {
       const res = await authAPI.login(email, password);
-      localStorage.setItem('token', res.data.token || res.token);
-      setUser({ ...res.data.user, studentProfile: res.data.studentProfile });
-      return res.data;
+      const token = res.data?.token || res.token;
+      const userData = res.data?.data?.user || res.data?.user || res.user;
+      const studentProfile = res.data?.data?.studentProfile || res.data?.studentProfile || res.studentProfile;
+      
+      localStorage.setItem('token', token);
+      setUser({ ...userData, studentProfile });
+      return res.data || res;
     } catch (err) {
       throw err;
     }
@@ -42,18 +62,12 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const res = await authAPI.register(userData);
-      localStorage.setItem('token', res.data.token || res.token);
-      let studentProfile = null;
-      if (userData.role === 'student') {
-        try {
-          const profileRes = await authAPI.getCurrentUser();
-          studentProfile = profileRes.data?.studentProfile || profileRes.studentProfile;
-        } catch (err) {
-          console.error('Error fetching student profile:', err);
-        }
-      }
-      setUser({ ...res.data.user, studentProfile });
-      return res.data;
+      const token = res.data?.token || res.token;
+      const newUser = res.data?.data?.user || res.data?.user || res.user;
+      
+      localStorage.setItem('token', token);
+      setUser({ ...newUser });
+      return res.data || res;
     } catch (err) {
       throw err;
     }
