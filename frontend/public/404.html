@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>OJT Hours Counter</title>
+  </head>
+  <body>
+    <div id="root">
+      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif;">
+        <div style="text-align: center;">
+          <h1>OJT Hours Counter</h1>
+          <p>Loading...</p>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Store the original path in sessionStorage before redirecting
+      var originalPath = window.location.pathname;
+      if (originalPath !== '/' && originalPath !== '/ojt-hours-checker/' && originalPath !== '/ojt-hours-checker/index.html') {
+        sessionStorage.setItem('redirectPath', originalPath);
+      }
+      // Redirect to index.html
+      window.location.href = '/ojt-hours-checker/index.html';
+    </script>
+  </body>
+</html>
+
