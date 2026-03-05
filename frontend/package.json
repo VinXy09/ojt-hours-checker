@@ -6,7 +6,7 @@
   "homepage": "https://vinxy09.github.io/ojt-hours-checker/",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "NODE_ENV=production vite build",
     "preview": "vite preview",
     "deploy": "gh-pages -d dist"
   },
