@@ -8,7 +8,6 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  // Important: Enable CORS for Apps Script
   withCredentials: false
 });
 
@@ -27,11 +26,11 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Transform response from Apps Script format
+// Transform response from Apps Script format - return as-is
 api.interceptors.response.use(
   (response) => {
-    // Apps Script returns the data directly
-    return response.data;
+    // Apps Script returns the data directly, so just return it
+    return response;
   },
   (error) => {
     // Handle errors from Apps Script
@@ -85,7 +84,7 @@ export const weeklyReportAPI = {
     api.get(`/weekly-reports/print?studentId=${studentId}&weekStartDate=${weekStartDate}&weekEndDate=${weekEndDate}`)
 };
 
-// Excel API - Note: File upload not supported in basic Apps Script
+// Excel API
 export const excelAPI = {
   exportTimesheet: (studentId, startDate, endDate) => {
     const params = new URLSearchParams();
