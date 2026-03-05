@@ -1,107 +1,83 @@
-# OJT Hours Counter - Deployment Plan
+# OJT Hours Counter - Deployment Plan (Updated)
 
 ## Project Overview
-- **Frontend**: React + Vite (Port 3000)
-- **Backend**: Node.js + Express (Port 5000)
-- **Database**: MySQL
-
-## Deployment Options
-
-### Recommended: Vercel (Frontend) + Render (Backend + MySQL)
+- **Frontend**: React + Vite (Port 3000) - Already deployed on GitHub Pages
+- **Backend**: Node.js + Express - **Deploying to Cyclic**
+- **Database**: MySQL (Your local MySQL Workbench or cloud database)
 
 ---
 
 ## Step 1: GitHub Setup
-- [ ] 1.1 Create GitHub repository named: `ojt-hours-counter`
-- [ ] 1.2 Initialize git in local project
-- [ ] 1.3 Push code to GitHub
+- [x] 1.1 Backend pushed to GitHub (cyclic.json added)
+- [ ] 1.2 Make sure backend is in its own GitHub repository
 
 ---
 
-## Step 2: Backend Deployment (Render)
+## Step 2: Backend Deployment (Cyclic)
 
-### 2.1 Create Render Account
-- Go to https://render.com and sign up with GitHub
+### 2.1 Create Cyclic Account
+- [ ] Go to https://cyclic.sh and sign in with GitHub
 
 ### 2.2 Deploy Backend
-- [ ] 2.2.1 Create new Web Service on Render
-- [ ] 2.2.2 Connect to GitHub repository
-- [ ] 2.2.3 Configure:
-  - Name: `ojt-hours-backend`
-  - Root Directory: `backend`
-  - Build Command: `npm install`
-  - Start Command: `npm start`
+- [ ] 2.2.1 Click "Connect Repository" on Cyclic dashboard
+- [ ] 2.2.2 Select your backend repository
+- [ ] 2.2.3 Cyclic will auto-detect configuration from `cyclic.json`
 
-### 2.3 Create MySQL Database
-- [ ] 2.3.1 Create new MySQL database on Render
-- [ ] 2.3.2 Note the database credentials
+### 2.3 Configure Environment Variables in Cyclic Dashboard
+Add these variables:
+| Variable | Value |
+|----------|-------|
+| `NODE_ENV` | `production` |
+| `PORT` | `3000` |
+| `DB_HOST` | Your MySQL host |
+| `DB_USER` | Your MySQL username |
+| `DB_PASSWORD` | Your MySQL password |
+| `DB_NAME` | Your database name |
+| `JWT_SECRET` | A random secret string |
+| `FRONTEND_URL` | `https://vinxy09.github.io` |
 
-### 2.4 Configure Environment Variables
-- [ ] 2.4.1 Add environment variables in Render:
-  ```
-  PORT=5000
-  DB_HOST=<your-mysql-host>
-  DB_USER=<your-mysql-user>
-  DB_PASSWORD=<your-mysql-password>
-  DB_NAME=<your-mysql-database>
-  JWT_SECRET=<your-jwt-secret>
-  ```
-
----
-
-## Step 3: Frontend Deployment (Vercel)
-
-### 3.1 Create Vercel Account
-- Go to https://vercel.com and sign up with GitHub
-
-### 3.2 Deploy Frontend
-- [ ] 3.2.1 Import GitHub repository to Vercel
-- [ ] 3.2.2 Configure:
-  - Framework Preset: `Vite`
-  - Root Directory: `frontend`
-  - Build Command: `npm run build`
-  - Output Directory: `dist`
-
-### 3.3 Configure Environment Variables
-- [ ] 3.3.1 Add environment variable:
-  ```
-  VITE_API_URL=<your-render-backend-url>
-  ```
+### 2.4 Database Note
+Since your MySQL is local (MySQL Workbench), you have two options:
+- [ ] **Option A**: Use a free cloud MySQL (FreeSQLDatabase, PlanetScale)
+- [ ] **Option B**: Keep local and use ngrok tunneling (not recommended for production)
 
 ---
 
-## Step 4: Update Frontend API Configuration
+## Step 3: Frontend Configuration
 
-### 4.1 Update api.js
-- [ ] 4.1.1 Change API_URL to use environment variable
-- [ ] 4.1.2 Redeploy frontend
+### 3.1 Create frontend/.env file
+```
+VITE_API_URL=https://your-cyclic-app.cyclic.app/api
+```
 
----
+### 3.2 Update api.js if needed
+The current setup already supports VITE_API_URL environment variable.
 
-## Step 5: Database Setup
-
-### 5.1 Run Schema
-- [ ] 5.1.1 Use Render's MySQL connection or MySQL Workbench
-- [ ] 5.1.2 Run `backend/schema.sql` queries
-- [ ] 5.1.3 Run `backend/create_excel_templates_table.sql` queries
-
----
-
-## Step 6: Final Testing
-
-- [ ] 6.1 Test backend health: `<backend-url>/api/health`
-- [ ] 6.2 Test frontend: `<vercel-frontend-url>`
-- [ ] 6.3 Test user registration
-- [ ] 6.4 Test login functionality
+### 3.3 Rebuild and Push Frontend
+```bash
+cd frontend
+npm run build
+git add .
+git commit -m "Update API URL for production"
+git push
+```
 
 ---
 
-## Alternative: All-in-One on Railway
+## Step 4: Verify Deployment
 
-### Railway Deployment
-- [ ] Create Railway account
-- [ ] Deploy both frontend and backend
-- [ ] Add MySQL plugin
+- [ ] 4.1 Test backend health: `https://your-app.cyclic.app/api/health`
+- [ ] 4.2 Test frontend: `https://vinxy09.github.io/OJT_Hour_Checker/`
+- [ ] 4.3 Test login/registration
+
+---
+
+## Files Created/Modified
+
+- ✅ `cyclic.json` - Cyclic deployment configuration
+- ✅ `backend/package.json` - Added Node.js engine requirement
+- ✅ `backend/.env.example` - Template for environment variables
+- ✅ `DEPLOYMENT_GUIDE.md` - Detailed deployment instructions
 
 ---
 
@@ -118,12 +94,5 @@ npm start
 cd frontend
 npm install
 npm run dev
-```
-
-### Production Build
-```bash
-# Frontend
-cd frontend
-npm run build
 ```
 

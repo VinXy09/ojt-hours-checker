@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "name": "ojt-hours-counter-backend",
+  "build": {
+    "runtime": "nodejs18",
+    "buildCommand": "npm install",
+    "startCommand": "node server.js"
+  },
+  "env": {
+    "NODE_ENV": {
+      "value": "production"
+    },
+    "PORT": {
+      "value": "3000"
+    }
+  }
+}
+
