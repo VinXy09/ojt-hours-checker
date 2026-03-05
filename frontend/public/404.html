@@ -20,8 +20,8 @@
       if (originalPath !== '/' && originalPath !== '/ojt-hours-checker/' && originalPath !== '/ojt-hours-checker/index.html') {
         sessionStorage.setItem('redirectPath', originalPath);
       }
-      // Redirect to index.html
-      window.location.href = '/ojt-hours-checker/index.html';
+      // Redirect to index.html (relative path)
+      window.location.href = './index.html';
     </script>
   </body>
 </html>
