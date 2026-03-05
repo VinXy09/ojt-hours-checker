@@ -1,22 +1,46 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://script.google.com/macros/s/AKfycbw9KRe4i8gmIpVyf51pf0u8XQXnTr0yrfwKvrXX_0mHVr9yZSFMu6XpeugMQ2hRpHDgbA/exec';
 
+// Create axios instance that works with Google Apps Script
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json'
-  }
+  },
+  // Important: Enable CORS for Apps Script
+  withCredentials: false
 });
 
-// Add token to requests
+// Transform request to Apps Script format
 api.interceptors.request.use((config) => {
+  // Convert REST path to Apps Script action parameter
+  const path = config.url.replace(/^\//, '');
+  config.url = `?action=${path}`;
+  
+  // Add token to request
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
   return config;
 });
+
+// Transform response from Apps Script format
+api.interceptors.response.use(
+  (response) => {
+    // Apps Script returns the data directly
+    return response.data;
+  },
+  (error) => {
+    // Handle errors from Apps Script
+    if (error.response?.data) {
+      return Promise.reject(error.response.data);
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Auth API
 export const authAPI = {
@@ -61,26 +85,8 @@ export const weeklyReportAPI = {
     api.get(`/weekly-reports/print?studentId=${studentId}&weekStartDate=${weekStartDate}&weekEndDate=${weekEndDate}`)
 };
 
-// Excel API
+// Excel API - Note: File upload not supported in basic Apps Script
 export const excelAPI = {
-  uploadTemplate: (studentId, file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('studentId', studentId);
-    return api.post('/excel/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-  },
-  getTemplate: (studentId) => api.get(`/excel/template/${studentId}`),
-  parseExcel: (file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    return api.post('/excel/parse', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    });
-  },
-  importRecords: (studentId, records) => api.post('/excel/import', { studentId, records }),
-  getPreview: (studentId) => api.get(`/excel/preview/${studentId}`),
   exportTimesheet: (studentId, startDate, endDate) => {
     const params = new URLSearchParams();
     if (startDate) params.append('startDate', startDate);
@@ -93,3 +99,4 @@ export const excelAPI = {
 };
 
 export default api;
+

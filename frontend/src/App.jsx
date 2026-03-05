@@ -66,7 +66,7 @@ const AppRoutes = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <Router future={{ v7_startTransition: true }}>
         <AppRoutes />
       </Router>
     </AuthProvider>

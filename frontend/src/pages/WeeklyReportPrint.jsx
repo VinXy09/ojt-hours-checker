@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { weeklyReportAPI, studentAPI } from '../services/api';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 const WeeklyReportPrint = () => {
   const { user, logout } = useAuth();
@@ -71,6 +73,132 @@ const WeeklyReportPrint = () => {
     window.print();
   };
 
+  const handleDownloadPDF = () => {
+    if (!reportData) return;
+
+    const doc = new jsPDF();
+    
+    // Try to get logo from the DOM element that's already displayed
+    const logoImg = document.querySelector('.printable-report .school-logo .logo-img');
+    
+    // Use setTimeout to ensure image is fully loaded
+    setTimeout(() => {
+      if (logoImg && logoImg.src && logoImg.complete) {
+        try {
+          // Get natural dimensions to maintain aspect ratio
+          const imgWidth = logoImg.naturalWidth || 80;
+          const imgHeight = logoImg.naturalHeight || 60;
+          const ratio = imgHeight / imgWidth;
+          const pdfWidth = 20; // width in mm
+          const pdfHeight = pdfWidth * ratio; // maintain aspect ratio
+          doc.addImage(logoImg.src, 'PNG', 95, 8, pdfWidth, pdfHeight);
+        } catch (e) {
+          console.log('Could not add logo from DOM:', e);
+        }
+      }
+      generatePDFContent(doc);
+    }, 100);
+  };
+
+  const generatePDFContent = (doc) => {
+    // School name
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Saint Francis Institute of Computer Studies', 105, 40, { align: 'center' });
+
+    // Report title
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('WEEKLY ACTIVITY REPORT', 105, 48, { align: 'center' });
+
+    // Week range
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Week: ' + formatDateRange(), 105, 55, { align: 'center' });
+
+    // Student info
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Name:', 20, 70);
+    doc.setFont('helvetica', 'normal');
+    doc.text(reportData.student.name, 45, 70);
+    
+    doc.setFont('helvetica', 'bold');
+    doc.text('Student No.:', 110, 70);
+    doc.setFont('helvetica', 'normal');
+    doc.text(reportData.student.studentId, 140, 70);
+
+    doc.setFont('helvetica', 'bold');
+    doc.text('Department:', 20, 77);
+    doc.setFont('helvetica', 'normal');
+    doc.text(reportData.student.department, 45, 77);
+
+    // Prepare table data
+    const tableData = [];
+    reportData.days.forEach((day) => {
+      if (day.records.length > 0) {
+        day.records.forEach((record) => {
+          const row = [
+            day.day + ' ' + formatDisplayDate(day.date),
+            record.time_in + ' - ' + record.time_out + ' (' + parseFloat(record.hours_worked).toFixed(1) + ' hrs)',
+            record.task_description
+          ];
+          tableData.push(row);
+        });
+      } else {
+        const row = [
+          day.day + ' ' + formatDisplayDate(day.date),
+          '-',
+          'No record'
+        ];
+        tableData.push(row);
+      }
+    });
+
+    // Add total row
+    tableData.push([
+      { content: 'Total Hours for the Week:', colSpan: 2, styles: { halign: 'right', fontStyle: 'bold' } },
+      { content: reportData.totalHours + ' hours', styles: { fontStyle: 'bold', textColor: [22, 163, 74] } }
+    ]);
+
+    // Generate table
+    doc.autoTable({
+      startY: 85,
+      head: [['Day', 'Time', 'Task / Activity']],
+      body: tableData,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [51, 51, 51],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 9
+      },
+      bodyStyles: {
+        fontSize: 9
+      },
+      columnStyles: {
+        0: { cellWidth: 40 },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 'auto' }
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      }
+    });
+
+    // Add signature section
+    const finalY = doc.lastAutoTable.finalY + 15;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Student Signature', 20, finalY);
+    
+    doc.setLineWidth(0.5);
+    doc.line(20, finalY + 12, 80, finalY + 12);
+
+    // Save PDF
+    doc.save('Weekly_Report_' + formatDateRange().replace(/ /g, '_') + '.pdf');
+  };
+
   const formatDateRange = () => {
     if (!reportData) return '';
     const start = new Date(reportData.weekStartDate);
@@ -133,13 +261,14 @@ const WeeklyReportPrint = () => {
           React.createElement('input', { type: 'date', value: weekEndDate, onChange: (e) => setWeekEndDate(e.target.value) })
         ),
         React.createElement('button', { className: 'btn btn-primary', onClick: fetchReport, disabled: loading }, loading ? 'Loading...' : 'Load Report'),
-        reportData && React.createElement('button', { className: 'btn', onClick: handlePrint }, 'Print Report')
+        reportData && React.createElement('button', { className: 'btn btn-primary', onClick: handleDownloadPDF }, 'Download PDF'),
+        reportData && React.createElement('button', { className: 'btn', onClick: handlePrint }, 'Print')
       ),
       error && React.createElement('div', { className: 'alert alert-error' }, error),
       reportData && React.createElement('div', { className: 'printable-report' },
         React.createElement('div', { className: 'report-header' },
           React.createElement('div', { className: 'school-logo' },
-            React.createElement('img', { src: '/logo_2.png', alt: 'School Logo', className: 'logo-img', style: { display: 'none' } })
+            React.createElement('img', { src: '/logo_2.png', alt: 'School Logo', className: 'logo-img' })
           ),
           React.createElement('div', { className: 'school-name' }, 'Saint Francis Institute of Computer Studies'),
           React.createElement('div', { className: 'report-title' }, 'WEEKLY ACTIVITY REPORT'),
@@ -209,3 +338,4 @@ const WeeklyReportPrint = () => {
 };
 
 export default WeeklyReportPrint;
+

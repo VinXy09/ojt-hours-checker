@@ -196,6 +196,54 @@ const Dashboard = () => {
     return records.filter(r => r.supervisor_approval).reduce((sum, r) => sum + parseFloat(r.hours_worked || 0), 0);
   };
 
+  // Calculate the possible finished date based on average hours worked per day
+  const getPossibleFinishedDate = () => {
+    const approvedHours = getApprovedHours();
+    const targetHours = studentProfile?.target_hours || 600;
+    const remainingHours = targetHours - approvedHours;
+    
+    if (remainingHours <= 0) {
+      return { date: null, completed: true };
+    }
+    
+    // Get approved records and calculate working days
+    const approvedRecords = records.filter(r => r.supervisor_approval);
+    
+    if (approvedRecords.length === 0) {
+      return { date: null, completed: false, message: 'No approved hours yet' };
+    }
+    
+    // Find the first and last approved record dates to calculate total working days
+    const sortedRecords = [...approvedRecords].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const firstDate = new Date(sortedRecords[0].date);
+    const lastDate = new Date(sortedRecords[sortedRecords.length - 1].date);
+    
+    // Calculate total days between first and last record (inclusive)
+    const totalDays = Math.ceil((lastDate - firstDate) / (1000 * 60 * 60 * 24)) + 1;
+    
+    // Calculate average hours per day
+    const avgHoursPerDay = approvedHours / totalDays;
+    
+    if (avgHoursPerDay <= 0) {
+      return { date: null, completed: false, message: 'Cannot calculate' };
+    }
+    
+    // Calculate days remaining to complete
+    const daysRemaining = remainingHours / avgHoursPerDay;
+    
+    // Calculate projected finish date
+    const today = new Date();
+    const finishDate = new Date(today);
+    finishDate.setDate(today.getDate() + Math.ceil(daysRemaining));
+    
+    return { 
+      date: finishDate, 
+      completed: false,
+      remainingHours: remainingHours.toFixed(1),
+      avgHoursPerDay: avgHoursPerDay.toFixed(1)
+    };
+  };
+
   const getProgress = () => {
     const hours = getApprovedHours();
     const target = studentProfile?.target_hours || 600;
@@ -381,8 +429,21 @@ const Dashboard = () => {
             <div className="value">{((studentProfile?.target_hours || 600) - getTotalHoursAll()).toFixed(1)}</div>
           </div>
           <div className="stat-card">
-            <h3>This Week</h3>
-            <div className="value">{records.filter(r => new Date(r.date) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}</div>
+            <h3>Possible Finished Date</h3>
+            {getPossibleFinishedDate().completed ? (
+              <div className="value" style={{ color: '#10b981', fontSize: '1.2rem' }}>Completed!</div>
+            ) : getPossibleFinishedDate().date ? (
+              <div className="value">
+                {getPossibleFinishedDate().date.toLocaleDateString()}
+                <span style={{ display: 'block', fontSize: '0.75rem', color: '#6b7280', marginTop: '4px' }}>
+                  {getPossibleFinishedDate().remainingHours} hrs remaining · {getPossibleFinishedDate().avgHoursPerDay} hrs/day avg
+                </span>
+              </div>
+            ) : (
+              <div className="value" style={{ fontSize: '0.9rem', color: '#6b7280' }}>
+                {getPossibleFinishedDate().message || 'No data'}
+              </div>
+            )}
           </div>
           <div className="stat-card">
             <h3>Reports</h3>

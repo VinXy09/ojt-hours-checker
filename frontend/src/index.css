@@ -1428,16 +1428,18 @@ tr:hover td {
 
 .calendar-day {
   text-align: center;
-  padding: 8px 2px;
-  font-size: 12px;
+  padding: 8px;
+  font-size: 13px;
   font-weight: 500;
   border-radius: var(--radius-sm);
-  color: var(--text-secondary);
+  color: #4b5563;
   transition: all 0.15s ease;
   min-height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  z-index: 1;
 }
 
 .calendar-day.worked {
@@ -1449,6 +1451,7 @@ tr:hover td {
   border: 2px solid var(--accent);
   color: var(--accent);
   font-weight: 600;
+  background: white;
 }
 
 .calendar-day:hover:not(.worked) {
