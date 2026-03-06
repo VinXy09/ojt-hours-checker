@@ -74,7 +74,7 @@ const AppRoutes = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router future={{ v7_startTransition: true }}>
+      <Router basename="/ojt-hours-checker" future={{ v7_startTransition: true }}>
         <AppRoutes />
       </Router>
     </AuthProvider>
