@@ -1,6 +1,13 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://script.google.com/macros/s/AKfycbw9KRe4i8gmIpVyf51pf0u8XQXnTr0yrfwKvrXX_0mHVr9yZSFMu6XpeugMQ2hRpHDgbA/exec';
+// Google Apps Script API URL - Replace with your deployed Web App URL
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw9KRe4i8gmIpVyf51pf0u8XQXnTr0yrfwKvrXX_0mHVr9yZSFMu6XpeugMQ2hRpHDgbA/exec';
+
+// CORS Proxy - Use this to avoid CORS issues with Google Apps Script
+// For production, deploy your Apps Script with "Anyone" access
+const CORS_PROXY = 'https://corsproxy.io/?';
+
+const API_URL = import.meta.env.VITE_API_URL || CORS_PROXY + encodeURIComponent(SCRIPT_URL);
 
 // Create axios instance that works with Google Apps Script
 const api = axios.create({
